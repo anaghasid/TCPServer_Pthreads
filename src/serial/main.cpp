@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
     //lets keep track of the session time
     struct timeval start1, end1;
     gettimeofday(&start1, NULL);
+    
     //also keep track of the amount of data sent as well
     int bytesRead, bytesWritten = 0;
     while(1)
