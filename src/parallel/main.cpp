@@ -29,9 +29,9 @@ queue<int> clientQueue;
 map<string, string> datastore;
 
 
-// void* sendMessage(int clientSocket, string message, )
+// void sendMessage(int clientSocket, string message, )
 //to handle client connections
-void* handleClient(void* arg) {
+void handleClient(void* arg) {
     while (true) {
         int clientSocket;
 
@@ -44,7 +44,7 @@ void* handleClient(void* arg) {
         } else {
             // Release the mutex and sleep for a while if the queue is empty
             pthread_mutex_unlock(&queueMutex);
-            usleep(100); // Sleep for 0.1 milliseconds
+            usleep(1); // Sleep for 0.001 milliseconds
             continue;
         }
         // Release the queue mutex after accessing the queue
