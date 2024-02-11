@@ -1,12 +1,6 @@
 #include <iostream>
 #include <string>
-#include <iostream>
-#include <string>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -20,28 +14,18 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <fstream>
-#include <unistd.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/uio.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <fstream>
 #include <pthread.h>
 #include <queue>
 #include <map>
+#include<vector>
 
 using namespace std;
 
-// Mutexes 
 pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mapMutex = PTHREAD_MUTEX_INITIALIZER;
 
-// Queue to hold incoming client connections
+// Queue to hold client requests
 queue<int> clientQueue;
-
-// Datastore as a map<string, string>
 map<string, string> datastore;
 
 
@@ -69,109 +53,107 @@ void* handleClient(void* arg) {
         char msg[1500];
         int bytesRead = 0;
         int bytesWritten = 0;
+        // Receive message from client
+        memset(&msg, 0, sizeof(msg));
+        bytesRead = recv(clientSocket, msg, sizeof(msg), 0);
+        if (bytesRead <= 0) {
+            // Error or connection closed by client
+            break;
+        }
+        string request(msg);
+        cout << "Client: " << msg << endl;
         
+        int start=0, end = 0;
+        vector<string> tokens;
+        while ((end = request.find("\n", start)) != std::string::npos) {
+              std::string token = request.substr(start, end - start);
+              tokens.push_back(token);
+              start = end + 1;
+          }
+          
         // Handle client communication
-        // int pos = 0;
-        while (true) {
-            // Receive message from client
-            memset(&msg, 0, sizeof(msg));
-            bytesRead = recv(clientSocket, msg, sizeof(msg), 0);
-            if (bytesRead <= 0) {
-                // Error or connection closed by client
+     for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == "DELETE") {
+            string key = tokens[i+1];
+            i++;
+            cout<<"Inside delete key is "<<key<<endl;
+            pthread_mutex_lock(&mapMutex);
+            int dels = datastore.erase(key);
+            pthread_mutex_unlock(&mapMutex);
+            if(dels<=0) {
+                bytesWritten = send(clientSocket, "NULL\n", 5, 0);
+                if (bytesWritten <= 0) {
+                    break;
+                }
+            }
+            else {
+                bytesWritten = send(clientSocket, "FIN\n", 4, 0);
+                if (bytesWritten <= 0) {
+                    break;
+                }
+            }
+        } 
+        
+        else if (tokens[i] == "WRITE") {
+            string key = tokens[i+1];
+            string value = tokens[i+2];
+            value = value.substr(1);
+            i = i+2;
+            pthread_mutex_lock(&mapMutex);
+            datastore[key] = value;
+            cout<<"Writing "<<key<<" to "<<value<<endl;
+            pthread_mutex_unlock(&mapMutex);
+            bytesWritten = send(clientSocket, "FIN\n", 4, 0);
+            if (bytesWritten <= 0) {
                 break;
             }
-            cout << "Client: " << msg << endl;
+        } 
 
-
-            string request(msg);
-            int pos = 0;
-            string command = request.substr(pos, request.find("\n"));
-            pos += request.find("\n", pos);
-            cout<<"Command is "<<command<<endl;
-
-            if (command == "DELETE") {
-              string key = request.substr(pos + 1,request.find("\n"));
-              pos += request.find("\n", pos);
-              cout<<"Inside delete key is "<<key<<endl;
-              pthread_mutex_lock(&mapMutex);
-              int dels = datastore.erase(key);
-              pthread_mutex_unlock(&mapMutex);
-              if(dels<=0) {
-                bytesWritten = send(clientSocket, "FIN", 3, 0);
-                if (bytesWritten <= 0) {
-                  break;
-                }
-              }
+        if (tokens[i] == "COUNT") {
+            string count = to_string(datastore.size());
+            cout<<"Count is "<<count;
+            bytesWritten = send(clientSocket, count.c_str(), count.size(), 0);
+            if (bytesWritten <= 0) {
+                break;
             }
-
-            if (command == "READ") {
-              cout<<"Inside read"<<endl;
-              string key = request.substr(pos + 1);
-              pos += request.find("\n", pos);;
-              string value;
-              pthread_mutex_lock(&mapMutex);
-              if(datastore.count(key))
+        } 
+        
+        else if (tokens[i] == "READ") {
+            string key = tokens[i+1];
+            cout<<"Inside read key = "<<key<<endl;
+            i++;
+            string value;
+            pthread_mutex_lock(&mapMutex);
+            if(datastore.count(key)) {
                 value = datastore[key];
                 cout<<"Read value "<<value<<" for key "<<key<<endl;
-              pthread_mutex_unlock(&mapMutex);
-              if(datastore.count(key)) {
-                bytesWritten = send(clientSocket, (char*)&value, value.size(), 0);
+            }
+            pthread_mutex_unlock(&mapMutex);
+            if(datastore.count(key)) {
+                bytesWritten = send(clientSocket, value.c_str(), value.size(), 0);
                 if (bytesWritten <= 0) {
-                  break;
-                }
-              }
-              else {
-                bytesWritten = send(clientSocket, "NULL", 4, 0);
-                if (bytesWritten <= 0) {
-                  break;
-              }
-              }
-            } 
-
-            if(command == "WRITE") {
-              string key = request.substr(pos + 1);
-              pos += request.find("\n", pos);
-              string value = request.substr(pos + 1);
-              pos += request.find("\n", pos);
-              pthread_mutex_lock(&mapMutex);
-              datastore[key] = value;
-              cout<<"Writing "<<key<<" to "<<value<<endl;
-              pthread_mutex_unlock(&mapMutex);
-              bytesWritten = send(clientSocket, "FIN", 3, 0);
-                if (bytesWritten <= 0) {
-                  break;
+                break;
                 }
             }
-
-            if(command=="COUNT") {
-              string count = to_string(datastore.size());
-              cout<<"Count is "<<count;
-              bytesWritten = send(clientSocket, (char*)&count, count.size(), 0);
+            else {
+                bytesWritten = send(clientSocket, "NULL\n", 5, 0);
                 if (bytesWritten <= 0) {
-                  break;
-                }
+                break;
             }
-
-            if(command=="END") {
-              close(clientSocket);
-              cout<<"Closing client"<<endl;
-              break;
             }
-
-            // Example processing: Echo back to the client
-            // bytesWritten = send(clientSocket, msg, strlen(msg), 0);
-            // if (bytesWritten <= 0) {
-            //     // Error writing to client
-            //     break;
-            // }
         }
 
-        // Close client socket
-        // close(clientSocket);
+        else if (tokens[i] == "END") {
+            close(clientSocket);
+            cout<<"Closing client\n"<<endl;
+            break;
     }
+}
 
     return NULL;
+    }
 }
+
 
 int main(int argc, char *argv[]) {
     // Check for correct usage
