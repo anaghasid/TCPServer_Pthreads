@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     // Also keep track of the socket descriptor
     int serverSd = socket(AF_INET, SOCK_STREAM, 0);
     int iSetOption = 1;
-    setsockopt(sfd, SQL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+    setsockopt(serverSd, SQL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
     if (serverSd < 0) {
         cerr << "Error establishing the server socket" << endl;
         exit(0);
