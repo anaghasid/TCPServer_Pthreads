@@ -34,7 +34,7 @@ map<string, string> datastore;
 
 // void* sendMessage(int clientSocket, string message, )
 //to handle client connections
-void* handleClient(int clientSocket) {
+void handleClient(int clientSocket) {
         char msg[1500];
         int bytesRead = 0;
         int bytesWritten = 0;
@@ -43,7 +43,7 @@ void* handleClient(int clientSocket) {
         bytesRead = recv(clientSocket, msg, sizeof(msg), 0);
         if (bytesRead <= 0) {
             // Error or connection closed by client
-            return NULL;
+            return;
         }
         string request(msg);
         cout << "Client: " << msg << endl;
@@ -127,12 +127,7 @@ void* handleClient(int clientSocket) {
             cout<<"Closing client\n"<<endl;
             break;
         }
-        
-        else {
-            break;
         }
-     }
-    return NULL;
 }
 
 
@@ -191,5 +186,4 @@ int main(int argc, char *argv[]) {
         // clientQueue.push(newSd);
         handleClient(newSd);
     }
-    return 0;
 }
