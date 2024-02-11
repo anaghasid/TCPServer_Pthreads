@@ -31,7 +31,7 @@ map<string, string> datastore;
 
 // void sendMessage(int clientSocket, string message, )
 //to handle client connections
-void handleClient(void* arg) {
+void* handleClient(void* arg) {
     while (true) {
         int clientSocket;
 
@@ -151,10 +151,9 @@ void handleClient(void* arg) {
             cout<<"Closing client\n"<<endl;
             break;
     }
-}
-
-    return NULL;
     }
+    }
+    return NULL;
 }
 
 

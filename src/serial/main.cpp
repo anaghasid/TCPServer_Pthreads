@@ -34,7 +34,7 @@ map<string, string> datastore;
 
 // void* sendMessage(int clientSocket, string message, )
 //to handle client connections
-void handleClient(int clientSocket) {
+void* handleClient(int clientSocket) {
         char msg[1500];
         int bytesRead = 0;
         int bytesWritten = 0;
@@ -127,7 +127,11 @@ void handleClient(int clientSocket) {
             cout<<"Closing client\n"<<endl;
             break;
         }
+        
+        else {
+            break;
         }
+     }
 }
 
 
@@ -186,4 +190,5 @@ int main(int argc, char *argv[]) {
         // clientQueue.push(newSd);
         handleClient(newSd);
     }
+    return 0;
 }
