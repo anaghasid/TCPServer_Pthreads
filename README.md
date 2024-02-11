@@ -1,6 +1,8 @@
 # Multithreaded TCP Server 
+Name: Anagha Siddheshwar
+SRN: PES1UG21CS075
 
-HP Assignement: PThreads
+HP Assignment: PThreads
 
 Build a multi-threaded server in C++, make use of PThreads for parallel programming.
 

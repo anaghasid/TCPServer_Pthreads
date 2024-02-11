@@ -29,6 +29,7 @@
 
 using namespace std;
 
+// Queue to hold client requests
 map<string, string> datastore;
 
 
@@ -61,6 +62,7 @@ void handleClient(int clientSocket) {
         if (tokens[i] == "DELETE") {
             string key = tokens[i+1];
             i++;
+            cout<<"Inside delete key is "<<key<<endl;
             int dels = datastore.erase(key);
             if(dels<=0) {
                 bytesWritten = send(clientSocket, "NULL\n", 5, 0);
@@ -82,7 +84,7 @@ void handleClient(int clientSocket) {
             value = value.substr(1);
             i = i+2;
             datastore[key] = value;
-            cout<<"Writing "<<value<<" to "<<key<<endl;
+            cout<<"Writing "<<key<<" to "<<value<<endl;
             bytesWritten = send(clientSocket, "FIN\n", 4, 0);
             if (bytesWritten <= 0) {
                 break;
@@ -106,6 +108,7 @@ void handleClient(int clientSocket) {
             string value;
             if(datastore.count(key)) {
                 value = datastore[key];
+                cout<<"Read value "<<value<<" for key "<<key<<endl;
                 value.append("\n");
             }
             if(datastore.count(key)) {
@@ -173,19 +176,16 @@ int main(int argc, char *argv[]) {
     listen(serverSd, 5);
     //receive a request from client using accept
     //we need a new address to connect with the client
-    
-    while (true) {
-        // Accept a new client connection
-        sockaddr_in newSockAddr;
-        socklen_t newSockAddrSize = sizeof(newSockAddr);
-        int newSd = accept(serverSd, (sockaddr *)&newSockAddr, &newSockAddrSize);
-        if (newSd < 0) {
-            cerr << "Error accepting request from client!" << endl;
-            continue;
-        }
-
-        // Add the new client socket to the queue
-        // clientQueue.push(newSd);
-        handleClient(newSd);
+    sockaddr_in newSockAddr;
+    socklen_t newSockAddrSize = sizeof(newSockAddr);
+    //accept, create a new socket descriptor to 
+    //handle the new connection with client
+    int newSd = accept(serverSd, (sockaddr *)&newSockAddr, &newSockAddrSize);
+    if(newSd < 0)
+    {
+        cerr << "Error accepting request from client!" << endl;
+        exit(1);
     }
+    cout << "Connected with client!" << endl;
+    handleClient(newSd);
 }

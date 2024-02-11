@@ -72,6 +72,7 @@ void* handleClient(void* arg) {
           }
           
         // Handle client communication
+        // no problem about END, because this only goes until end of commands
      for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i] == "DELETE") {
             string key = tokens[i+1];
@@ -112,6 +113,7 @@ void* handleClient(void* arg) {
         if (tokens[i] == "COUNT") {
             string count = to_string(datastore.size());
             cout<<"Count is "<<count;
+            count.append("\n");
             bytesWritten = send(clientSocket, count.c_str(), count.size(), 0);
             if (bytesWritten <= 0) {
                 break;
@@ -127,6 +129,7 @@ void* handleClient(void* arg) {
             if(datastore.count(key)) {
                 value = datastore[key];
                 cout<<"Read value "<<value<<" for key "<<key<<endl;
+                value.append("\n");
             }
             pthread_mutex_unlock(&mapMutex);
             if(datastore.count(key)) {
