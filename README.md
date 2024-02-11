@@ -1,6 +1,8 @@
 # Multithreaded TCP Server 
-Name: Anagha Siddheshwar
-SRN: PES1UG21CS075
+
+**Name: Anagha Siddheshwar**
+
+**SRN: PES1UG21CS075**
 
 HP Assignment: PThreads
 
