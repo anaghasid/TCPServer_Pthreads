@@ -43,7 +43,7 @@ void* handleClient(int clientSocket) {
         bytesRead = recv(clientSocket, msg, sizeof(msg), 0);
         if (bytesRead <= 0) {
             // Error or connection closed by client
-            return;
+            return NULL;
         }
         string request(msg);
         cout << "Client: " << msg << endl;
@@ -132,6 +132,7 @@ void* handleClient(int clientSocket) {
             break;
         }
      }
+    return NULL;
 }
 
 
