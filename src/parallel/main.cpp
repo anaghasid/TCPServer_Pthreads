@@ -44,7 +44,7 @@ void* handleClient(void* arg) {
         } else {
             // Release the mutex and sleep for a while if the queue is empty
             pthread_mutex_unlock(&queueMutex);
-            usleep(10000); // Sleep for 10 milliseconds
+            usleep(100); // Sleep for 0.1 milliseconds
             continue;
         }
         // Release the queue mutex after accessing the queue

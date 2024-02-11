@@ -128,8 +128,7 @@ void handleClient(int clientSocket) {
             break;
         }
         }
-    return;
-    }
+}
 
 
 
@@ -155,8 +154,7 @@ int main(int argc, char *argv[]) {
     //open stream oriented socket with internet address
     //also keep track of the socket descriptor
     int serverSd = socket(AF_INET, SOCK_STREAM, 0);
-    if(serverSd < 0)
-    {
+    if(serverSd < 0) {
         cerr << "Error establishing the server socket" << endl;
         exit(0);
     }
